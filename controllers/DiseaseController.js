@@ -1,4 +1,9 @@
 const { predict } = require("../utils/mlUtils");
+const db = require("../utils/database");
+const { v4: uuidv4 } = require("uuid");
+const { Storage } = require("@google-cloud/storage");
+const storage = new Storage();
+const bucketName = "tanamore-bucket";
 
 const classLabels = [
   "Apple Apple scab", // 0
@@ -59,30 +64,117 @@ let diseaseModel; // Model deteksi penyakit
 const detectDisease = async (req, res) => {
   try {
     if (!req.file || !req.file.buffer) {
-      return res.status(400).json({ error: "No image uploaded." });
+      return res.status(400).json({
+        status: "fail",
+        error: "No image uploaded.",
+      });
     }
 
-    // Prediksi menggunakan model penyakit (input: 256x256)
+    if (req.file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({
+        status: "fail",
+        error: "Image size exceeds 10MB limit.",
+      });
+    }
+
     const predictions = await predict(
       diseaseModel,
       req.file.buffer,
       [256, 256]
     );
 
-    // Cari hasil prediksi dengan confidence tertinggi
     const maxIndex = predictions.indexOf(Math.max(...predictions));
     const predictedClass = classLabels[maxIndex];
     const confidence = (predictions[maxIndex] * 100).toFixed(2);
 
+    const diseaseId = `disease_${maxIndex.toString().padStart(2, "0")}`;
+
+    // Generate filename with timestamp or random ID
+    const filename = `${uuidv4()}_${Date.now()}.jpg`;
+
+    // Upload image to bucket
+    let imageUrl;
+    try {
+      imageUrl = await uploadImageToBucket(req.file.buffer, filename);
+    } catch (error) {
+      return res.status(500).json({
+        status: "error",
+        error: error.message, // Menampilkan pesan error upload ke bucket
+      });
+    }
+
+    const [rows] = await db.query(
+      "SELECT * FROM plant_diseases WHERE disease_id = ?",
+      [diseaseId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        status: "fail",
+        error: "Disease not found in the database.",
+        predictedClass,
+        confidence: `${confidence}%`,
+        imageUrl,
+      });
+    }
+
+    // Store the prediction result (could be Firestore or Cloud SQL)
+    const predictionData = {
+      id: uuidv4(),
+      diseaseId: diseaseId,
+      predictedClass,
+      confidence,
+      imageUrl,
+      createdAt: new Date(),
+    };
+
+    // Menyimpan ke Firestore
+    try {
+      const firestore = require("firebase-admin").firestore();
+      await firestore.collection("disease_predictions").add(predictionData);
+    } catch (error) {
+      return res.status(500).json({
+        status: "error",
+        error: "Failed to store data in Firestore.",
+        details: error.message, // Menampilkan pesan error penyimpanan data
+      });
+    }
+
     res.status(200).json({
+      status: "success",
       result: predictedClass,
       confidence: `${confidence}%`,
+      diseaseInfo: rows[0],
+      imageUrl,
     });
   } catch (err) {
     console.error("Error in disease detection:", err.message);
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: err.message });
+    res.status(500).json({
+      status: "error",
+      error: "Internal server error",
+      details: err.message,
+    });
+  }
+};
+
+const uploadImageToBucket = async (imageBuffer, filename) => {
+  try {
+    const folderPath = "user_uploads/"; // Folder yang diinginkan di dalam bucket
+    const fullFilename = `${folderPath}${filename}`; // Gabungkan folder dan nama file
+
+    const bucket = storage.bucket(bucketName);
+    const file = bucket.file(fullFilename);
+
+    // Upload file ke bucket
+    await file.save(imageBuffer, {
+      resumable: false,
+      contentType: "image/jpeg", // Sesuaikan dengan tipe file yang di-upload
+    });
+
+    return `https://storage.googleapis.com/${bucketName}/${fullFilename}`; // URL file yang di-upload
+  } catch (error) {
+    console.error("Error uploading image to bucket:", error.message);
+    throw new Error("Failed to upload image to the cloud storage."); // Lempar error jika gagal
   }
 };
 

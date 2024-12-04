@@ -1,4 +1,5 @@
 const { predict } = require("../utils/mlUtils");
+const db = require("../utils/database");
 
 const classLabels = [
   "Aloe Vera",
@@ -25,11 +26,14 @@ const classLabels = [
   "Tomato",
 ];
 
-let encyclopediaModel;
+let encyclopediaModel; // Model deteksi jenis tanaman
+
+// Muat model saat server dimulai
 (async () => {
   const { loadModel2 } = require("../utils/mlUtils");
   try {
     encyclopediaModel = await loadModel2();
+    console.log("Encyclopedia model loaded successfully!");
   } catch (err) {
     console.error("Error loading encyclopedia model:", err.message);
     process.exit(1);
@@ -39,10 +43,19 @@ let encyclopediaModel;
 const identifyPlant = async (req, res) => {
   try {
     if (!req.file || !req.file.buffer) {
-      return res.status(400).json({ error: "No image uploaded." });
+      return res.status(400).json({
+        status: "fail",
+        error: "No image uploaded.",
+      });
     }
 
-    // Prediksi menggunakan model ensiklopedia (input: 224x224)
+    if (req.file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({
+        status: "fail",
+        error: "Image size exceeds 10MB limit.",
+      });
+    }
+
     const predictions = await predict(
       encyclopediaModel,
       req.file.buffer,
@@ -53,15 +66,39 @@ const identifyPlant = async (req, res) => {
     const predictedClass = classLabels[maxIndex];
     const confidence = (predictions[maxIndex] * 100).toFixed(2);
 
+    if (confidence < 50) {
+      return res.status(400).json({
+        status: "fail",
+        error:
+          "Prediction confidence is too low. The image might not match any known plant.",
+      });
+    }
+
+    const [rows] = await db.query(
+      "SELECT * FROM plant_encyclopedia WHERE plant_name = ?",
+      [predictedClass]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        status: "fail",
+        error: "Plant not found in the encyclopedia.",
+      });
+    }
+
     res.status(200).json({
+      status: "success",
       result: predictedClass,
       confidence: `${confidence}%`,
+      plantInfo: rows[0],
     });
   } catch (err) {
     console.error("Error in plant identification:", err.message);
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: err.message });
+    res.status(500).json({
+      status: "error",
+      error: "Internal server error",
+      details: err.message,
+    });
   }
 };
 

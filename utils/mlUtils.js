@@ -1,46 +1,41 @@
 const tfjs = require("@tensorflow/tfjs-node");
+const { Storage } = require("@google-cloud/storage");
+const storage = new Storage();
 
-async function loadModel1(modelPath) {
-  try {
-    const modelUrl = "file://models/disease_model/model.json";
-    const model = await tfjs.loadLayersModel(modelUrl);
-    console.log("Model loaded successfully!");
-    return model;
-  } catch (err) {
-    throw new Error("Failed to load model. Check the model path and format.");
-  }
+// Fungsi untuk memuat model penyakit dari URL GCS
+async function loadModel1() {
+  const modelURL =
+    "https://storage.googleapis.com/tanamore-bucket/models/disease_model/model.json";
+  const model = await tfjs.loadLayersModel(modelURL);
+  return model;
 }
 
-async function loadModel2(modelPath) {
-  try {
-    const modelUrl = "file://models/encyclopedia_model/model.json";
-    const model = await tfjs.loadLayersModel(modelUrl);
-    console.log("Model loaded successfully!");
-    return model;
-  } catch (err) {
-    throw new Error("Failed to load model. Check the model path and format.");
-  }
+// Fungsi untuk memuat model ensiklopedia dari URL GCS
+async function loadModel2() {
+  const modelURL =
+    "https://storage.googleapis.com/tanamore-bucket/models/encyclopedia_model/model.json";
+  const model = await tfjs.loadLayersModel(modelURL);
+  return model;
 }
 
-async function predict(model, imageBuffer, inputSize) {
+// Fungsi untuk melakukan prediksi dengan model
+async function predict(model, imageBuffer, imageSize) {
   try {
-    const tensor = tfjs.node.decodeImage(imageBuffer);
-    console.log("Original image shape:", tensor.shape);
-
-    // Resize ke ukuran yang diharapkan model
-    const resizedTensor = tensor
-      .resizeNearestNeighbor(inputSize) // Resize ke dimensi input model
+    // Decode gambar dan pastikan valid
+    const tensor = tfjs.node
+      .decodeImage(imageBuffer, 3) // Pastikan gambar adalah RGB
+      .resizeNearestNeighbor(imageSize) // Resize sesuai model
       .toFloat()
-      .div(tfjs.scalar(255.0)) // Normalisasi
-      .expandDims();
+      .div(tfjs.scalar(255.0)) // Normalisasi nilai piksel
+      .expandDims(); // Tambahkan dimensi batch
 
-    console.log("Resized image shape:", resizedTensor.shape);
-
-    const predictions = await model.predict(resizedTensor).data();
+    const predictions = await model.predict(tensor).data();
     return predictions;
   } catch (err) {
-    throw new Error(`Error during prediction: ${err.message}`);
+    throw new Error(
+      "Error during prediction. Ensure the image format is valid."
+    );
   }
 }
 
-module.exports = { loadModel1, loadModel2, predict };
+module.exports = { predict, loadModel1, loadModel2 };
