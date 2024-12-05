@@ -1,9 +1,8 @@
 const { predict } = require("../utils/mlUtils");
-const db = require("../utils/database");
 const { v4: uuidv4 } = require("uuid");
 const { Storage } = require("@google-cloud/storage");
 const storage = new Storage();
-const bucketName = "tanamore-bucket";
+const bucketName = "tanamore";
 
 const classLabels = [
   "Apple Apple scab", // 0
@@ -61,20 +60,28 @@ let diseaseModel; // Model deteksi penyakit
   }
 })();
 
+const generateCustomId = () => {
+  const now = new Date();
+  const timestamp = now
+    .toISOString()
+    .replace(/[-:.TZ]/g, "")
+    .slice(0, 14);
+  const randomPart = Math.random().toString(36).substring(2, 8);
+  return `${timestamp}-${randomPart}`;
+};
+
 const detectDisease = async (req, res) => {
   try {
     if (!req.file || !req.file.buffer) {
-      return res.status(400).json({
-        status: "fail",
-        error: "No image uploaded.",
-      });
+      return res
+        .status(400)
+        .json({ status: "fail", error: "No image uploaded." });
     }
 
-    if (req.file.size > 10 * 1024 * 1024) {
-      return res.status(400).json({
-        status: "fail",
-        error: "Image size exceeds 10MB limit.",
-      });
+    if (req.file.size > 3 * 1024 * 1024) {
+      return res
+        .status(400)
+        .json({ status: "fail", error: "Image size exceeds 3MB limit." });
     }
 
     const predictions = await predict(
@@ -82,33 +89,21 @@ const detectDisease = async (req, res) => {
       req.file.buffer,
       [256, 256]
     );
-
     const maxIndex = predictions.indexOf(Math.max(...predictions));
     const predictedClass = classLabels[maxIndex];
     const confidence = (predictions[maxIndex] * 100).toFixed(2);
-
     const diseaseId = `disease_${maxIndex.toString().padStart(2, "0")}`;
+    const filename = `${generateCustomId()}.jpg`;
 
-    // Generate filename with timestamp or random ID
-    const filename = `${uuidv4()}_${Date.now()}.jpg`;
+    // Upload image to Cloud Storage
+    const imageUrl = await uploadImageToBucket(req.file.buffer, filename);
 
-    // Upload image to bucket
-    let imageUrl;
-    try {
-      imageUrl = await uploadImageToBucket(req.file.buffer, filename);
-    } catch (error) {
-      return res.status(500).json({
-        status: "error",
-        error: error.message, // Menampilkan pesan error upload ke bucket
-      });
-    }
+    // Query Firestore
+    const firestore = require("firebase-admin").firestore();
+    const docRef = firestore.collection("plant_diseases").doc(diseaseId);
+    const doc = await docRef.get();
 
-    const [rows] = await db.query(
-      "SELECT * FROM plant_diseases WHERE disease_id = ?",
-      [diseaseId]
-    );
-
-    if (rows.length === 0) {
+    if (!doc.exists) {
       return res.status(404).json({
         status: "fail",
         error: "Disease not found in the database.",
@@ -118,33 +113,38 @@ const detectDisease = async (req, res) => {
       });
     }
 
-    // Store the prediction result (could be Firestore or Cloud SQL)
+    const diseaseInfo = doc.data();
+
+    // Prepare Firestore Data
     const predictionData = {
-      id: uuidv4(),
-      diseaseId: diseaseId,
+      id: generateCustomId(), // ID dengan format custom
+      diseaseId,
       predictedClass,
       confidence,
       imageUrl,
       createdAt: new Date(),
+      diseaseInfo, // Tambahkan detail penyakit ke Firestore
     };
 
-    // Menyimpan ke Firestore
+    // Save to Firestore
     try {
-      const firestore = require("firebase-admin").firestore();
-      await firestore.collection("disease_predictions").add(predictionData);
+      await firestore
+        .collection("disease_predictions")
+        .doc(predictionData.id)
+        .set(predictionData); // Gunakan .set() agar ID yang custom dipakai
     } catch (error) {
-      return res.status(500).json({
-        status: "error",
-        error: "Failed to store data in Firestore.",
-        details: error.message, // Menampilkan pesan error penyimpanan data
-      });
+      console.error("Error saving to Firestore:", error.message);
+      return res
+        .status(500)
+        .json({ status: "error", error: "Failed to save data in Firestore." });
     }
 
+    // Send Response
     res.status(200).json({
       status: "success",
       result: predictedClass,
       confidence: `${confidence}%`,
-      diseaseInfo: rows[0],
+      diseaseInfo,
       imageUrl,
     });
   } catch (err) {

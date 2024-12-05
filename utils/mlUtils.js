@@ -5,7 +5,7 @@ const storage = new Storage();
 // Fungsi untuk memuat model penyakit dari URL GCS
 async function loadModel1() {
   const modelURL =
-    "https://storage.googleapis.com/tanamore-bucket/models/disease_model/model.json";
+    "https://storage.googleapis.com/tanamore/models/disease_model/model.json";
   const model = await tfjs.loadLayersModel(modelURL);
   return model;
 }
@@ -13,7 +13,7 @@ async function loadModel1() {
 // Fungsi untuk memuat model ensiklopedia dari URL GCS
 async function loadModel2() {
   const modelURL =
-    "https://storage.googleapis.com/tanamore-bucket/models/encyclopedia_model/model.json";
+    "https://storage.googleapis.com/tanamore/models/encyclopedia_model/model.json";
   const model = await tfjs.loadLayersModel(modelURL);
   return model;
 }
