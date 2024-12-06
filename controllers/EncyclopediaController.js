@@ -30,9 +30,9 @@ let encyclopediaModel; // Model deteksi jenis tanaman
 
 // Muat model saat server dimulai
 (async () => {
-  const { loadModel2 } = require("../utils/mlUtils");
+  const { loadModelEncyclopedia } = require("../utils/mlUtils");
   try {
-    encyclopediaModel = await loadModel2();
+    encyclopediaModel = await loadModelEncyclopedia();
     console.log("Encyclopedia model loaded successfully!");
   } catch (err) {
     console.error("Error loading encyclopedia model:", err.message);
