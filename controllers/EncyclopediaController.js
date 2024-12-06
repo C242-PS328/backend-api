@@ -1,5 +1,4 @@
-const { predict } = require("../utils/mlUtils");
-// const db = require("../utils/database");
+const { predict, loadModelEncyclopedia } = require("../utils/mlUtils");
 
 const classLabels = [
   "Aloe Vera",
@@ -30,7 +29,6 @@ let encyclopediaModel; // Model deteksi jenis tanaman
 
 // Muat model saat server dimulai
 (async () => {
-  const { loadModelEncyclopedia } = require("../utils/mlUtils");
   try {
     encyclopediaModel = await loadModelEncyclopedia();
     console.log("Encyclopedia model loaded successfully!");

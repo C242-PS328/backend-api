@@ -1,4 +1,4 @@
-const { predict } = require("../utils/mlUtils");
+const { predict, loadModelDisease } = require("../utils/mlUtils");
 const { Storage } = require("@google-cloud/storage");
 const storage = new Storage();
 const bucketName = "tanamore";
@@ -49,7 +49,6 @@ let diseaseModel; // Model deteksi penyakit
 
 // Muat model saat server dimulai
 (async () => {
-  const { loadModelDisease } = require("../utils/mlUtils");
   try {
     diseaseModel = await loadModelDisease();
     console.log("Disease model loaded successfully!");
