@@ -1,10 +1,9 @@
 const express = require("express");
-const multer = require("multer");
 const { detectDisease } = require("../controllers/DiseaseController");
-
 const router = express.Router();
-const upload = multer(); // Middleware untuk upload file
+const uploadFile = require("../middlewares/fileUpload");
+const validateFile = require("../middlewares/validation");
 
-router.post("/predict", upload.single("image"), detectDisease);
+router.post("/predict", uploadFile, validateFile, detectDisease);
 
 module.exports = router;
