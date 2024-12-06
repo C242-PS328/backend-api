@@ -6,7 +6,7 @@ const app = express();
 
 const admin = require("firebase-admin");
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
+  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
 });
 
 // Middleware
