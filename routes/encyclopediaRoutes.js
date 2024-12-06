@@ -1,16 +1,15 @@
 const express = require("express");
-const multer = require("multer");
 const {
   identifyPlant,
   getAllPlants,
   getPlantById,
   getPlantByName,
 } = require("../controllers/EncyclopediaController");
-
 const router = express.Router();
-const upload = multer(); // Middleware untuk upload file
+const uploadFile = require("../middlewares/fileUpload")
+const validateFile = require("../middlewares/validation")
 
-router.post("/predict", upload.single("image"), identifyPlant);
+router.post("/predict", uploadFile, validateFile, identifyPlant);
 router.get("/search", async (req, res) => {
   await getPlantByName(req, res);
 });

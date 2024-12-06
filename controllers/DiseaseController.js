@@ -1,8 +1,7 @@
-const { predict } = require("../utils/mlUtils");
+const { predict, loadModelDisease } = require("../utils/mlUtils");
 const { Storage } = require("@google-cloud/storage");
 const storage = new Storage();
-const bucketName = "tanamore";
-
+const { successResponse, errorResponse } = require("../utils/responseUtils");
 const classLabels = [
   "Apple Apple scab", // 0
   "Apple Black rot", // 1
@@ -49,7 +48,6 @@ let diseaseModel; // Model deteksi penyakit
 
 // Muat model saat server dimulai
 (async () => {
-  const { loadModelDisease } = require("../utils/mlUtils");
   try {
     diseaseModel = await loadModelDisease();
     console.log("Disease model loaded successfully!");
@@ -59,6 +57,7 @@ let diseaseModel; // Model deteksi penyakit
   }
 })();
 
+// Fungsi untuk generate id predict
 const generateCustomId = () => {
   const now = new Date();
   const timestamp = now
@@ -69,18 +68,15 @@ const generateCustomId = () => {
   return `${timestamp}-${randomPart}`;
 };
 
+// Fungsi untuk prediksi penyakit tanaman
 const detectDisease = async (req, res) => {
   try {
     if (!req.file || !req.file.buffer) {
-      return res
-        .status(400)
-        .json({ status: "fail", error: "No image uploaded." });
+      return errorResponse(res, "No image uploaded", 400);
     }
 
     if (req.file.size > 3 * 1024 * 1024) {
-      return res
-        .status(400)
-        .json({ status: "fail", error: "Image size exceeds 3MB limit." });
+      return errorResponse(res, "Image size exceeds 3MB limit.", 400);
     }
 
     const predictions = await predict(
@@ -103,13 +99,7 @@ const detectDisease = async (req, res) => {
     const doc = await docRef.get();
 
     if (!doc.exists) {
-      return res.status(404).json({
-        status: "fail",
-        error: "Disease not found in the database.",
-        predictedClass,
-        confidence: `${confidence}%`,
-        imageUrl,
-      });
+      return errorResponse(res, "Disease not found in the database.", 404);
     }
 
     const diseaseInfo = doc.data();
@@ -133,35 +123,33 @@ const detectDisease = async (req, res) => {
         .set(predictionData); // Gunakan .set() agar ID yang custom dipakai
     } catch (error) {
       console.error("Error saving to Firestore:", error.message);
-      return res
-        .status(500)
-        .json({ status: "error", error: "Failed to save data in Firestore." });
+      return errorResponse(res, "Failed to save data in Firestore.", 500);
     }
-
-    // Send Response
-    res.status(200).json({
-      status: "success",
-      result: predictedClass,
-      confidence: `${confidence}%`,
-      diseaseInfo,
-      imageUrl,
-    });
+    // Send response
+    return successResponse(
+      res,
+      {
+        result: predictedClass,
+        confidence: `${confidence}%`,
+        diseaseInfo,
+        imageUrl,
+      },
+      "Success predict disease",
+      201
+    );
   } catch (err) {
     console.error("Error in disease detection:", err.message);
-    res.status(500).json({
-      status: "error",
-      error: "Internal server error",
-      details: err.message,
-    });
+    return errorResponse(res, "Internal server error", 500);
   }
 };
 
+// Fungsi upload image ke bucket
 const uploadImageToBucket = async (imageBuffer, filename) => {
   try {
     const folderPath = "user_uploads/"; // Folder yang diinginkan di dalam bucket
     const fullFilename = `${folderPath}${filename}`; // Gabungkan folder dan nama file
 
-    const bucket = storage.bucket(bucketName);
+    const bucket = storage.bucket(process.env.BUCKET_NAME);
     const file = bucket.file(fullFilename);
 
     // Upload file ke bucket
@@ -170,7 +158,7 @@ const uploadImageToBucket = async (imageBuffer, filename) => {
       contentType: "image/jpeg", // Sesuaikan dengan tipe file yang di-upload
     });
 
-    return `https://storage.googleapis.com/${bucketName}/${fullFilename}`; // URL file yang di-upload
+    return `https://storage.googleapis.com/${process.env.BUCKET_NAME}/${fullFilename}`; // URL file yang di-upload
   } catch (error) {
     console.error("Error uploading image to bucket:", error.message);
     throw new Error("Failed to upload image to the cloud storage."); // Lempar error jika gagal

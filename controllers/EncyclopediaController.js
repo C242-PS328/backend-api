@@ -1,5 +1,5 @@
-const { predict } = require("../utils/mlUtils");
-// const db = require("../utils/database");
+const { predict, loadModelEncyclopedia } = require("../utils/mlUtils");
+const { errorResponse, successResponse } = require("../utils/responseUtils");
 
 const classLabels = [
   "Aloe Vera",
@@ -30,7 +30,6 @@ let encyclopediaModel; // Model deteksi jenis tanaman
 
 // Muat model saat server dimulai
 (async () => {
-  const { loadModelEncyclopedia } = require("../utils/mlUtils");
   try {
     encyclopediaModel = await loadModelEncyclopedia();
     console.log("Encyclopedia model loaded successfully!");
@@ -40,6 +39,7 @@ let encyclopediaModel; // Model deteksi jenis tanaman
   }
 })();
 
+// Fungsi untuk menghasilkan ID unik
 const generateCustomId = () => {
   const now = new Date();
   const timestamp = now
@@ -50,22 +50,20 @@ const generateCustomId = () => {
   return `${timestamp}-${randomPart}`;
 };
 
+// Fungsi untuk identifikasi tanaman berdasarkan gambar yang diunggah
 const identifyPlant = async (req, res) => {
   try {
     if (!req.file || !req.file.buffer) {
-      return res.status(400).json({
-        status: "fail",
-        error: "No image uploaded.",
-      });
+      // Gagal jika tidak ada file gambar
+      return errorResponse(res, "No image uploaded", 400);
     }
 
     if (req.file.size > 3 * 1024 * 1024) {
-      return res.status(400).json({
-        status: "fail",
-        error: "Image size exceeds 3MB limit.",
-      });
+      // Gagal jika ukuran file melebihi 3MB
+      return errorResponse(res, "Image size exceeds 3MB limit.", 400);
     }
 
+    // Lakukan prediksi pada gambar
     const predictions = await predict(
       encyclopediaModel,
       req.file.buffer,
@@ -77,11 +75,12 @@ const identifyPlant = async (req, res) => {
     const confidence = (predictions[maxIndex] * 100).toFixed(2);
 
     if (confidence < 50) {
-      return res.status(400).json({
-        status: "fail",
-        error:
-          "Prediction confidence is too low. The image might not match any known plant.",
-      });
+      // Gagal jika tingkat keyakinan prediksi terlalu rendah
+      return errorResponse(
+        res,
+        "Prediction confidence is too low. The image might not match any known plant.",
+        400
+      );
     }
 
     // Query Firestore untuk mendapatkan detail tanaman
@@ -92,10 +91,8 @@ const identifyPlant = async (req, res) => {
       .get();
 
     if (snapshot.empty) {
-      return res.status(404).json({
-        status: "fail",
-        error: "Plant not found in the encyclopedia.",
-      });
+      // Gagal jika tanaman tidak ditemukan di ensiklopedia
+      return errorResponse(res, "Plant not found in the encyclopedia.", 404);
     }
 
     const plantInfo = snapshot.docs[0].data();
@@ -116,29 +113,26 @@ const identifyPlant = async (req, res) => {
         .set(predictionData);
     } catch (error) {
       console.error("Error saving prediction to Firestore:", error.message);
-      return res.status(500).json({
-        status: "error",
-        error: "Failed to save prediction in Firestore.",
-      });
+      return errorResponse(res, "Failed to save prediction in Firestore.", 500);
     }
-
-    // Respon sukses dengan hasil prediksi
-    res.status(200).json({
-      status: "success",
-      result: predictedClass,
-      confidence: `${confidence}%`,
-      plantInfo,
-    });
+    // Berhasil menyimpan prediksi ke Firestore
+    successResponse(
+      res,
+      {
+        result: predictedClass,
+        confidence: `${confidence}`,
+        plantInfo,
+      },
+      "Success predict plant",
+      201
+    );
   } catch (err) {
     console.error("Error in plant identification:", err.message);
-    res.status(500).json({
-      status: "error",
-      error: "Internal server error",
-      details: err.message,
-    });
+    return errorResponse(res, "Internal server error", 500);
   }
 };
 
+// Fungsi untuk mendapatkan semua tanaman di ensiklopedia
 const getAllPlants = async (req, res) => {
   const firestore = require("firebase-admin").firestore();
 
@@ -147,10 +141,8 @@ const getAllPlants = async (req, res) => {
     const snapshot = await firestore.collection("plant_encyclopedias").get();
 
     if (snapshot.empty) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Tidak ada data di ensiklopedia tanaman.",
-      });
+      // Gagal jika tidak ada data
+      return errorResponse(res, "Tidak ada data di ensiklopedia tanaman.", 404);
     }
 
     // Ambil semua data dokumen
@@ -159,29 +151,27 @@ const getAllPlants = async (req, res) => {
       ...doc.data(),
     }));
 
-    res.status(200).json({
-      status: "success",
-      data: plants,
-    });
+    // Berhasil mengambil semua data ensiklopedia tanaman
+    return successResponse(
+      res,
+      plants,
+      "Plants encyclopedia retrieved successfully",
+      200
+    );
   } catch (error) {
     console.error("Error saat mengambil semua data tanaman:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: "Terjadi kesalahan saat mengambil data.",
-      details: error.message,
-    });
+    return errorResponse(res, "Terjadi kesalahan saat mengambil data", 500);
   }
 };
 
+// Fungsi untuk mendapatkan data tanaman berdasarkan ID
 const getPlantById = async (req, res) => {
   const { plant_id } = req.params; // Ambil plant_id dari parameter URL
   const firestore = require("firebase-admin").firestore();
 
   if (!plant_id || typeof plant_id !== "string") {
-    return res.status(400).json({
-      status: "fail",
-      error: "Invalid or missing plant_id.",
-    });
+    // Gagal jika plant_id tidak valid atau tidak ada
+    return errorResponse(res, "Invalid or missing plant_id", 400);
   }
 
   try {
@@ -192,37 +182,31 @@ const getPlantById = async (req, res) => {
       .get();
 
     if (!doc.exists) {
-      return res.status(404).json({
-        status: "fail",
-        error: "Plant not found in the encyclopedia.",
-      });
+      // Gagal jika tanaman tidak ditemukan
+      return errorResponse(res, "Plant not found in the encyclopedia.", 404);
     }
-
     const plantInfo = doc.data(); // Ambil data dari dokumen
-    res.status(200).json({
-      status: "success",
-      plantInfo,
-    });
+    // Berhasil mendapatkan data tanaman berdasarkan ID
+    return successResponse(res, plantInfo, "Success get plant by id", 200);
   } catch (error) {
     console.error("Error fetching plant by ID:", error.message);
-    res.status(500).json({
-      status: "error",
-      error: "Internal server error",
-      details: error.message,
-    });
+    return errorResponse(res, "Internal server error", 500);
   }
 };
 
+// Fungsi untuk mendapatkan data tanaman berdasarkan nama
 const getPlantByName = async (req, res) => {
   const { name } = req.query; // Ambil nama tanaman dari query parameter
   const firestore = require("firebase-admin").firestore();
 
   try {
     if (!name || typeof name !== "string") {
-      return res.status(400).json({
-        status: "fail",
-        message: "Nama tanaman tidak diberikan atau tidak valid.",
-      });
+      // Gagal jika nama tidak valid atau tidak diberikan
+      return errorResponse(
+        res,
+        "Nama tanaman tidak diberikan atau tidak valid.",
+        400
+      );
     }
 
     // Normalize nama input user untuk pencarian (lowercase)
@@ -248,23 +232,22 @@ const getPlantByName = async (req, res) => {
       });
 
     if (results.length === 0) {
-      return res.status(404).json({
-        status: "fail",
-        message: `Tidak ada data tanaman yang cocok dengan '${name}'.`,
-      });
+      // Gagal jika tidak ada data yang cocok
+      return errorResponse(
+        res,
+        `Tidak ada data tanaman yang cocok dengan '${name}'.`,
+        404
+      );
     }
-
-    res.status(200).json({
-      status: "success",
-      data: results,
-    });
+    // Berhasil mendapatkan data tanaman berdasarkan nama
+    return successResponse(res, results, "Success get plant by name", 200);
   } catch (error) {
     console.error("Error saat mencari tanaman:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: "Terjadi kesalahan saat mencari data tanaman.",
-      details: error.message,
-    });
+    return errorResponse(
+      res,
+      "Terjadi kesalahan saat mencari data tanaman.",
+      500
+    );
   }
 };
 
