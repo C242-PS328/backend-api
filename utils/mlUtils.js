@@ -1,19 +1,16 @@
 const tfjs = require("@tensorflow/tfjs-node");
-const { Storage } = require("@google-cloud/storage");
-const storage = new Storage();
+require('dotenv').config(); // Load .env file
 
 // Fungsi untuk memuat model penyakit dari URL GCS
-async function loadModel1() {
-  const modelURL =
-    "https://storage.googleapis.com/tanamore/models/disease_model/model.json";
+async function loadModelDisease() {
+  const modelURL = process.env.MODEL1_URL;
   const model = await tfjs.loadLayersModel(modelURL);
   return model;
 }
 
 // Fungsi untuk memuat model ensiklopedia dari URL GCS
-async function loadModel2() {
-  const modelURL =
-    "https://storage.googleapis.com/tanamore/models/encyclopedia_model/model.json";
+async function loadModelEncyclopedia() {
+  const modelURL = process.env.MODEL2_URL;
   const model = await tfjs.loadLayersModel(modelURL);
   return model;
 }
@@ -38,4 +35,4 @@ async function predict(model, imageBuffer, imageSize) {
   }
 }
 
-module.exports = { predict, loadModel1, loadModel2 };
+module.exports = { predict, loadModelDisease, loadModelEncyclopedia };
