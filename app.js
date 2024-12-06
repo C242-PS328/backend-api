@@ -5,8 +5,10 @@ const encyclopediaRoutes = require("./routes/encyclopediaRoutes");
 const app = express();
 
 const admin = require("firebase-admin");
+
+const credentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 admin.initializeApp({
-  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
+  credential: admin.credential.cert(credentials),
 });
 
 // Middleware

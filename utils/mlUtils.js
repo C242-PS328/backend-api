@@ -1,5 +1,4 @@
 const tfjs = require("@tensorflow/tfjs-node");
-require('dotenv').config(); // Load .env file
 
 // Fungsi untuk memuat model penyakit dari URL GCS
 async function loadModelDisease() {

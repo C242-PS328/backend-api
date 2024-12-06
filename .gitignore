@@ -1,6 +1,4 @@
 /node_modules
 /package-lock.json
-/utils/database.js
 /service-account.json
 /.env
-tanamore_db.sql
