@@ -139,7 +139,7 @@ const detectDisease = async (req, res) => {
     );
   } catch (err) {
     console.error("Error in disease detection:", err.message);
-    return errorResponse(res, "Internal server error", 500);
+    return errorResponse(res, "Error in disease detection", 500);
   }
 };
 
