@@ -67,7 +67,7 @@ const identifyPlant = async (req, res) => {
     const predictions = await predict(
       encyclopediaModel,
       req.file.buffer,
-      [224, 224]
+      [224, 224],
     );
 
     const maxIndex = predictions.indexOf(Math.max(...predictions));
@@ -79,7 +79,7 @@ const identifyPlant = async (req, res) => {
       return errorResponse(
         res,
         "Prediction confidence is too low. The image might not match any known plant.",
-        400
+        400,
       );
     }
 
@@ -124,7 +124,7 @@ const identifyPlant = async (req, res) => {
         plantInfo,
       },
       "Success predict plant",
-      201
+      201,
     );
   } catch (err) {
     console.error("Error in plant identification:", err.message);
@@ -156,7 +156,7 @@ const getAllPlants = async (req, res) => {
       res,
       plants,
       "Plants encyclopedia retrieved successfully",
-      200
+      200,
     );
   } catch (error) {
     console.error("An error occurred while retrieving data:", error.message);
@@ -202,11 +202,7 @@ const getPlantByName = async (req, res) => {
   try {
     if (!name || typeof name !== "string") {
       // Gagal jika nama tidak valid atau tidak diberikan
-      return errorResponse(
-        res,
-        "Invalid or missing plant name",
-        400
-      );
+      return errorResponse(res, "Invalid or missing plant name", 400);
     }
 
     // Normalize nama input user untuk pencarian (lowercase)
@@ -233,11 +229,7 @@ const getPlantByName = async (req, res) => {
 
     if (results.length === 0) {
       // Gagal jika tidak ada data yang cocok
-      return errorResponse(
-        res,
-        "Plant not found in encyclopedia",
-        404
-      );
+      return errorResponse(res, "Plant not found in encyclopedia", 404);
     }
     // Berhasil mendapatkan data tanaman berdasarkan nama
     return successResponse(res, results, "Success get plant by name", 200);

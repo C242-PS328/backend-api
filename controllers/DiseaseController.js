@@ -99,7 +99,7 @@ const detectDisease = async (req, res) => {
     const doc = await docRef.get();
 
     if (!doc.exists) {
-      return errorResponse(res, "Disease not found in the database.", 404);
+      return errorResponse(res, "Disease not found in the database", 404);
     }
 
     const diseaseInfo = doc.data();
