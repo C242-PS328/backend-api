@@ -1,0 +1,716 @@
+openapi: 3.0.0
+info:
+  title: Plant Disease and Encyclopedia Detection API
+  version: 1.0.0
+  description: API documentation for detecting plant diseases and identifying plants using machine learning.
+
+servers:
+  - url: http://localhost:3000/docs
+
+tags:
+  - name: disease-detection
+    description: Plant disease detection operations
+  - name: plant-encyclopedia
+    description: Plant identification and encyclopedia operations
+
+paths:
+  /diseases/predict:
+    post:
+      tags:
+        - disease-detection
+      summary: Detect plant disease
+      description: Upload an image of a plant leaf to detect the disease.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: The image file of the plant leaf to be analyzed.
+      responses:
+        "201":
+          description: Disease detected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., success or failure).
+                    example: "success"
+                  message:
+                    type: string
+                    description: Descriptive message about the operation result.
+                    example: "Success predict disease"
+                  data:
+                    type: object
+                    properties:
+                      result:
+                        type: string
+                        description: The predicted disease class.
+                        example: "Corn Common rust"
+                      confidence:
+                        type: string
+                        description: The confidence level of the prediction in percentage.
+                        example: "100.00%"
+                      diseaseInfo:
+                        type: object
+                        properties:
+                          disease_id:
+                            type: string
+                            description: Unique ID for the detected disease.
+                            example: "disease_09"
+                          disease_name:
+                            type: string
+                            description: Name of the detected disease.
+                            example: "Corn Common Rust"
+                          symptoms:
+                            type: string
+                            description: Symptoms of the disease.
+                            example: "Common rust ditandai dengan bercak-bercak merah-cokelat..."
+                          causes:
+                            type: string
+                            description: Causes of the disease.
+                            example: "Jamur Puccinia sorghi"
+                          treatment:
+                            type: string
+                            description: Recommended treatment for the disease.
+                            example: "Aplikasi fungisida dan pengelolaan kelembapan..."
+                          prevention_tips:
+                            type: string
+                            description: Tips to prevent the disease.
+                            example: "Rotasi tanaman dan pemantauan gejala penyakit..."
+                      imageUrl:
+                        type: string
+                        format: uri
+                        description: URL of the uploaded image.
+                        example: "https://storage.googleapis.com/tanamore/user_uploads/20241206153934-7xv8yx.jpg"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., fail or error).
+                  error:
+                    type: string
+                    description: Detailed error message explaining the issue.
+              examples:
+                noImageUploaded:
+                  summary: No image uploaded
+                  value:
+                    status: "fail"
+                    error: "No image uploaded."
+                imageSizeExceeds:
+                  summary: Image size exceeds 3MB limit
+                  value:
+                    status: "fail"
+                    error: "Image size exceeds 3MB limit."
+        "404":
+          description: Disease not found in the database
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., fail or error).
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Detailed error message explaining the issue.
+                    example: "Disease not found in the database."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., fail or error).
+                  error:
+                    type: string
+                    description: Detailed error message explaining the issue.
+              examples:
+                errorInDiseaseDetection:
+                  summary: Error in disease detection
+                  value:
+                    status: "fail"
+                    error: "Error in disease detection"
+                errorSavingToFirestore:
+                  summary: Failed to save data in Firestore
+                  value:
+                    status: "fail"
+                    error: "Failed to save data in Firestore"
+  /encyclopedias/predict:
+    post:
+      tags:
+        - plant-encyclopedia
+      summary: Identify plant
+      description: Upload an image of a plant to identify its species.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: The image file of the plant to be identified.
+      responses:
+        "201":
+          description: Plant identified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call.
+                    example: "success"
+                  message:
+                    type: string
+                    description: Descriptive message about the operation result.
+                    example: "Success predict plant"
+                  data:
+                    type: object
+                    properties:
+                      result:
+                        type: string
+                        description: The predicted plant species.
+                        example: "Elephant Ear"
+                      confidence:
+                        type: string
+                        description: The confidence level of the prediction as a percentage.
+                        example: "67.23"
+                      plantInfo:
+                        type: object
+                        properties:
+                          plant_id:
+                            type: string
+                            description: Unique ID for the identified plant.
+                            example: "plant_04"
+                          plant_name:
+                            type: string
+                            description: Common name of the plant.
+                            example: "Elephant Ear"
+                          scientific_name:
+                            type: string
+                            description: Scientific name of the plant.
+                            example: "Alocasia spp."
+                          description:
+                            type: string
+                            description: Detailed description of the plant.
+                            example: "Elephant Ear adalah tanaman hias tropis..."
+                          harvest_time:
+                            type: string
+                            nullable: true
+                            description: Time required for the plant to be harvested.
+                            example: "6–12 bulan untuk menghasilkan umbi..."
+                          watering_frequency:
+                            type: string
+                            description: Frequency of watering the plant.
+                            example: "3–4 kali per minggu di musim panas..."
+                          watering_time:
+                            type: string
+                            nullable: true
+                            description: Preferred time for watering the plant.
+                            example: null
+                          watering_interval:
+                            type: string
+                            description: Detailed interval for watering.
+                            example: "Disiram 3–4 kali per minggu untuk menjaga tanah..."
+                          origin_place:
+                            type: string
+                            description: Place of origin of the plant.
+                            example: "Asia Tenggara"
+                          climate:
+                            type: string
+                            description: Ideal climate for the plant.
+                            example: "Iklim tropis dan subtropis..."
+                          fertilizer:
+                            type: string
+                            description: Recommended fertilizer and application frequency.
+                            example: "Pupuk cair dengan kandungan nitrogen tinggi..."
+                          uses:
+                            type: string
+                            description: Uses of the plant.
+                            example: "Hiasan: Daunnya yang besar dan unik menjadikannya tanaman hias..."
+                          common_disease:
+                            type: string
+                            description: Common diseases affecting the plant.
+                            example: "Root Rot: Disebabkan oleh penyiraman berlebih..."
+                          harvest_time_days:
+                            type: string
+                            nullable: true
+                            description: Harvest time in days (if applicable).
+                            example: null
+                          image_url:
+                            type: string
+                            format: uri
+                            description: URL of the plant image.
+                            example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/04_ElephantEarPlant.jpg"
+
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  error:
+                    type: string
+              examples:
+                noImage:
+                  summary: No image uploaded
+                  value:
+                    status: "fail"
+                    error: "No image uploaded."
+                fileTooLarge:
+                  summary: Image size exceeds 3MB limit
+                  value:
+                    status: "fail"
+                    error: "Image size exceeds 3MB limit."
+        "404":
+          description: Plant not found in the encyclopedia
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., fail or error).
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating that the plant was not found.
+                    example: "Plant not found in the encyclopedia."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., fail or error).
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating an internal server error.
+              examples:
+                errorInPlantIdentifying:
+                  summary: Error in plant detection
+                  value:
+                    status: "fail"
+                    error: "Error in plant detection"
+                errorSavingToFirestore:
+                  summary: Failed to save data in Firestore
+                  value:
+                    status: "fail"
+                    error: "Failed to save data in Firestore"
+
+  /encyclopedias:
+    get:
+      tags:
+        - plant-encyclopedia
+      summary: Get all plants
+      description: Retrieve a list of all plants in the encyclopedia.
+      responses:
+        "200":
+          description: A list of all plants retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., "success").
+                    example: "success"
+                  message:
+                    type: string
+                    description: A message detailing the result of the API call.
+                    example: "Plants encyclopedia retrieved successfully"
+                  data:
+                    type: array
+                    description: A list of plant objects.
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The ID of the plant.
+                          example: "plant_10"
+                        plant_id:
+                          type: string
+                          description: A unique identifier for the plant.
+                          example: "plant_10"
+                        plant_name:
+                          type: string
+                          description: The common name of the plant.
+                          example: "Aloe Vera"
+                        scientific_name:
+                          type: string
+                          description: The scientific name of the plant.
+                          example: "Aloe barbadensis miller"
+                        description:
+                          type: string
+                          description: A brief description of the plant.
+                          example: "Aloe Vera adalah tanaman sukulen dengan daun tebal berwarna hijau kebiruan, berbentuk segitiga, dan ujungnya berduri kecil."
+                        harvest_time:
+                          type: string
+                          description: The time it takes for the plant to reach maturity or be harvested.
+                          example: "6-8 bulan sejak ditanam untuk gelnya."
+                        watering_frequency:
+                          type: string
+                          description: The frequency with which the plant should be watered.
+                          example: "7–14 hari, tergantung pada kelembaban tanah dan suhu lingkungan."
+                        watering_interval:
+                          type: string
+                          description: The interval at which the plant should be watered.
+                          example: "Disiram biasanya 1-2 minggu sekali, tergantung kondisi cuaca."
+                        origin_place:
+                          type: string
+                          description: The origin or place of origin of the plant.
+                          example: "Afrika Utara dan Timur Tengah"
+                        climate:
+                          type: string
+                          description: The ideal climate for the plant.
+                          example: "Iklim kering hingga semi-tropis dengan suhu antara 20–30C"
+                        fertilizer:
+                          type: string
+                          description: Type of fertilizer and application frequency.
+                          example: "Pupuk organik atau pupuk sukulen sekali setiap bulan selama musim semi dan musim panas."
+                        uses:
+                          type: string
+                          description: Common uses for the plant.
+                          example: "Hiasan: Cocok untuk dekorasi indoor dan outdoor karena bentuknya yang unik."
+                        common_disease:
+                          type: string
+                          description: Common diseases or pests that affect the plant.
+                          example: "Root rot: Disebabkan oleh penyiraman berlebih. Pest infestations: Rentan terhadap kutu putih dan tungau laba-laba."
+                        harvest_time_days:
+                          type: integer
+                          description: The number of days it takes for the plant to be harvested.
+                          example: 180
+                        image_url:
+                          type: string
+                          description: URL of the plant's image.
+                          example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/10_AloeVera.jpg"
+        "404":
+          description: No data found in the encyclopedia
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., fail or error).
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating that no data is available.
+                    example: "No data found in the encyclopedia"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., fail or error).
+                    example: "fail"
+                  error:
+                    type: string
+                    description: An error occurred while retrieving data
+                    example: "An error occurred while retrieving data"
+
+  /encyclopedias/{plant_id}:
+    get:
+      tags:
+        - plant-encyclopedia
+      summary: Get plant information by ID
+      description: Retrieve detailed information about a specific plant using its ID.
+      parameters:
+        - name: plant_id
+          in: path
+          required: true
+          description: The ID of the plant to retrieve.
+          schema:
+            type: string
+            example: "plant_11"
+      responses:
+        "200":
+          description: The plant details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., "success").
+                    example: "success"
+                  message:
+                    type: string
+                    description: A message detailing the result of the API call.
+                    example: "Success get plant by id"
+                  data:
+                    type: object
+                    description: Detailed information of the plant.
+                    properties:
+                      plant_id:
+                        type: string
+                        description: Unique identifier for the plant.
+                        example: "plant_11"
+                      plant_name:
+                        type: string
+                        description: The common name of the plant.
+                        example: "Peach"
+                      scientific_name:
+                        type: string
+                        description: The scientific name of the plant.
+                        example: "Prunus persica"
+                      description:
+                        type: string
+                        description: A brief description of the plant.
+                        example: "Peach adalah tanaman buah yang memiliki pohon kecil hingga sedang dengan daun hijau lonjong dan bunga berwarna merah muda atau putih."
+                      harvest_time:
+                        type: string
+                        description: The time it takes for the plant to mature and be harvested.
+                        example: "90-150 hari setelah berbunga."
+                      watering_frequency:
+                        type: string
+                        description: How often the plant needs to be watered.
+                        example: "1-2 kali seminggu, tergantung pada tingkat kelembaban tanah dan kondisi cuaca."
+                      watering_interval:
+                        type: string
+                        description: The interval at which the plant should be watered.
+                        example: "Disiram secara teratur, terutama selama masa pertumbuhan dan pembentukan buah. Tanah harus tetap lembab tetapi tidak tergenang air."
+                      origin_place:
+                        type: string
+                        description: The origin place of the plant.
+                        example: "China"
+                      climate:
+                        type: string
+                        description: The ideal climate for the plant.
+                        example: "Suhu optimal antara 18-30C"
+                      fertilizer:
+                        type: string
+                        description: Fertilizer requirements for the plant.
+                        example: "Gunakan pupuk kaya nitrogen, fosfor, dan kalium. Pemupukan dilakukan setiap musim semi dan musim panas."
+                      uses:
+                        type: string
+                        description: Common uses for the plant.
+                        example: "Hiasan: Bunga Peach yang cantik sering digunakan sebagai tanaman hias, terutama di musim semi."
+                      common_disease:
+                        type: string
+                        description: Common diseases or pests affecting the plant.
+                        example: "Peach leaf curl: Disebabkan oleh jamur Taphrina deformans."
+                      harvest_time_days:
+                        type: integer
+                        description: The number of days it takes for the plant to be harvested.
+                        example: 730
+                      image_url:
+                        type: string
+                        description: URL of the plant's image.
+                        example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/11_Peach.jpg"
+        "400":
+          description: Invalid or missing plant ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating that the plant ID is invalid or missing.
+                    example: "Invalid or missing plant_id"
+        "404":
+          description: Plant not found in the encyclopedia
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating that the plant was not found.
+                    example: "Plant not found in the encyclopedia."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating an internal server error.
+                    example: "Error fetching plant by ID"
+
+  /encyclopedias/search:
+    get:
+      tags:
+        - plant-encyclopedia
+      summary: Search for plants by name
+      description: Retrieve plant information based on a search query for the plant's name or scientific name.
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: The name or scientific name of the plant to search for.
+          schema:
+            type: string
+            example: "Peach"
+      responses:
+        "200":
+          description: A list of plants retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the API call (e.g., "success").
+                    example: "success"
+                  message:
+                    type: string
+                    description: A message detailing the result of the API call.
+                    example: "Success get plant by name"
+                  data:
+                    type: array
+                    description: A list of plants matching the search criteria or all plants if no name is provided.
+                    items:
+                      type: object
+                      properties:
+                        plant_id:
+                          type: string
+                          description: Unique identifier for the plant.
+                          example: "plant_11"
+                        plant_name:
+                          type: string
+                          description: The common name of the plant.
+                          example: "Peach"
+                        scientific_name:
+                          type: string
+                          description: The scientific name of the plant.
+                          example: "Prunus persica"
+                        description:
+                          type: string
+                          description: A brief description of the plant.
+                          example: "Peach adalah tanaman buah yang memiliki pohon kecil hingga sedang dengan daun hijau lonjong dan bunga berwarna merah muda atau putih."
+                        harvest_time:
+                          type: string
+                          description: The time it takes for the plant to mature and be harvested.
+                          example: "90-150 hari setelah berbunga."
+                        watering_frequency:
+                          type: string
+                          description: How often the plant needs to be watered.
+                          example: "1-2 kali seminggu, tergantung pada tingkat kelembaban tanah dan kondisi cuaca."
+                        watering_interval:
+                          type: string
+                          description: The interval at which the plant should be watered.
+                          example: "Disiram secara teratur, terutama selama masa pertumbuhan dan pembentukan buah. Tanah harus tetap lembab tetapi tidak tergenang air."
+                        origin_place:
+                          type: string
+                          description: The origin place of the plant.
+                          example: "China"
+                        climate:
+                          type: string
+                          description: The ideal climate for the plant.
+                          example: "Suhu optimal antara 18-30C"
+                        fertilizer:
+                          type: string
+                          description: Fertilizer requirements for the plant.
+                          example: "Gunakan pupuk kaya nitrogen, fosfor, dan kalium. Pemupukan dilakukan setiap musim semi dan musim panas."
+                        uses:
+                          type: string
+                          description: Common uses for the plant.
+                          example: "Hiasan: Bunga Peach yang cantik sering digunakan sebagai tanaman hias, terutama di musim semi."
+                        common_disease:
+                          type: string
+                          description: Common diseases or pests affecting the plant.
+                          example: "Peach leaf curl: Disebabkan oleh jamur Taphrina deformans."
+                        harvest_time_days:
+                          type: integer
+                          description: The number of days it takes for the plant to be harvested.
+                          example: 730
+                        image_url:
+                          type: string
+                          description: URL of the plant's image.
+                          example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/11_Peach.jpg"
+        "400":
+          description: Invalid or missing plant name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating that the plant name is invalid or missing.
+                    example: "Invalid or missing plant name"
+        "404":
+          description: No matching plants found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating that no plants matched the search criteria.
+                    example: "Plant not found in the encyclopedia."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "fail"
+                  error:
+                    type: string
+                    description: Error message indicating an internal server error.
+                    example: "Error fetching plant by Name"
