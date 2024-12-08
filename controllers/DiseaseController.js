@@ -1,7 +1,8 @@
 const { predict, loadModelDisease } = require("../utils/mlUtils");
+const { successResponse, errorResponse } = require("../utils/responseUtils");
 const { Storage } = require("@google-cloud/storage");
 const storage = new Storage();
-const { successResponse, errorResponse } = require("../utils/responseUtils");
+
 const classLabels = [
   "Apple Apple scab", // 0
   "Apple Black rot", // 1
@@ -68,6 +69,28 @@ const generateCustomId = () => {
   return `${timestamp}-${randomPart}`;
 };
 
+// Fungsi upload image ke bucket
+const uploadImageToBucket = async (imageBuffer, filename) => {
+  try {
+    const folderPath = "user_uploads_disease/"; // Folder yang diinginkan di dalam bucket
+    const fullFilename = `${folderPath}${filename}`; // Gabungkan folder dan nama file
+
+    const bucket = storage.bucket(process.env.BUCKET_NAME);
+    const file = bucket.file(fullFilename);
+
+    // Upload file ke bucket
+    await file.save(imageBuffer, {
+      resumable: false,
+      contentType: "image/jpeg", // Sesuaikan dengan tipe file yang di-upload
+    });
+
+    return `https://storage.googleapis.com/${process.env.BUCKET_NAME}/${fullFilename}`; // URL file yang di-upload
+  } catch (error) {
+    console.error("Error uploading image to bucket:", error.message);
+    throw new Error("Failed to upload image to the cloud storage."); // Lempar error jika gagal
+  }
+};
+
 // Fungsi untuk prediksi penyakit tanaman
 const detectDisease = async (req, res) => {
   try {
@@ -75,7 +98,6 @@ const detectDisease = async (req, res) => {
       return errorResponse(res, "No image uploaded", 400);
     }
 
-    
     if (req.file.size > 3 * 1024 * 1024) {
       return errorResponse(res, "Image size exceeds 3MB limit.", 400);
     }
@@ -94,6 +116,15 @@ const detectDisease = async (req, res) => {
     // Upload image to Cloud Storage
     const imageUrl = await uploadImageToBucket(req.file.buffer, filename);
 
+    if (confidence < 50) {
+      // Gagal jika tingkat keyakinan prediksi terlalu rendah
+      return errorResponse(
+        res,
+        "Prediction confidence is too low. The image might not match any known plant.",
+        400
+      );
+    }
+    
     // Query Firestore
     const firestore = require("firebase-admin").firestore();
     const docRef = firestore.collection("plant_diseases").doc(diseaseId);
@@ -141,28 +172,6 @@ const detectDisease = async (req, res) => {
   } catch (err) {
     console.error("Error in disease detection:", err.message);
     return errorResponse(res, "Error in disease detection", 500);
-  }
-};
-
-// Fungsi upload image ke bucket
-const uploadImageToBucket = async (imageBuffer, filename) => {
-  try {
-    const folderPath = "user_uploads/"; // Folder yang diinginkan di dalam bucket
-    const fullFilename = `${folderPath}${filename}`; // Gabungkan folder dan nama file
-
-    const bucket = storage.bucket(process.env.BUCKET_NAME);
-    const file = bucket.file(fullFilename);
-
-    // Upload file ke bucket
-    await file.save(imageBuffer, {
-      resumable: false,
-      contentType: "image/jpeg", // Sesuaikan dengan tipe file yang di-upload
-    });
-
-    return `https://storage.googleapis.com/${process.env.BUCKET_NAME}/${fullFilename}`; // URL file yang di-upload
-  } catch (error) {
-    console.error("Error uploading image to bucket:", error.message);
-    throw new Error("Failed to upload image to the cloud storage."); // Lempar error jika gagal
   }
 };
 
