@@ -7,9 +7,8 @@ const {
 } = require("../controllers/EncyclopediaController");
 const router = express.Router();
 const uploadFile = require("../middlewares/fileUpload");
-const validateFile = require("../middlewares/validation");
 
-router.post("/predict", uploadFile, validateFile, identifyPlant);
+router.post("/predict", uploadFile, identifyPlant);
 router.get("/search", async (req, res) => {
   await getPlantByName(req, res);
 });
