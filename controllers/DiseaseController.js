@@ -99,7 +99,7 @@ const detectDisease = async (req, res) => {
     const doc = await docRef.get();
 
     if (!doc.exists) {
-      return errorResponse(res, "Disease not found in the database.", 404);
+      return errorResponse(res, "Disease not found in the database", 404);
     }
 
     const diseaseInfo = doc.data();
@@ -139,7 +139,7 @@ const detectDisease = async (req, res) => {
     );
   } catch (err) {
     console.error("Error in disease detection:", err.message);
-    return errorResponse(res, "Internal server error", 500);
+    return errorResponse(res, "Error in disease detection", 500);
   }
 };
 
