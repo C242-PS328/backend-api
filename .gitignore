@@ -3,3 +3,5 @@
 /service-account.json
 /.env
 tanamore_db.sql
+data.csv
+convert.js
