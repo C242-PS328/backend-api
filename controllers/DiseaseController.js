@@ -75,18 +75,6 @@ const detectDisease = async (req, res) => {
       return errorResponse(res, "No image uploaded", 400);
     }
 
-    // Validasi apakah gambar valid menggunakan sharp
-    try {
-      await sharp(req.file.buffer)
-        .metadata(); // Memastikan gambar dapat diproses
-    } catch (error) {
-      console.error("Invalid or corrupt image file:", error.message);
-      return errorResponse(
-        res,
-        "Error during prediction. Ensure the image file is valid or not corrupt.",
-        400
-      );
-    }
     
     if (req.file.size > 3 * 1024 * 1024) {
       return errorResponse(res, "Image size exceeds 3MB limit.", 400);
