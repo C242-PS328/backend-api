@@ -4,19 +4,19 @@ FROM node:18
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy application files into the container
-COPY . .
+# Copy package.json and package-lock.json (if exists) first
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy package.json and package-lock.json (if exists)
-COPY package*.json ./
+# Copy the rest of the application files
+COPY . .
 
-# Copy .env file
-COPY .env .env
+#Set the port for container
+ENV PORT 3000
 
-# Expose the application port (optional)
+# Expose the application port
 EXPOSE 3000
 
 # Start the application
