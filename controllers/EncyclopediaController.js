@@ -102,7 +102,7 @@ const identifyPlant = async (req, res) => {
 
     // Query Firestore untuk mendapatkan detail tanaman
     const firestore = require("firebase-admin").firestore();
-    const docRef = firestore.collection("plant_encyclopedias").doc(plantId);
+    const docRef = firestore.collection("encyclopedia_plants").doc(plantId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
