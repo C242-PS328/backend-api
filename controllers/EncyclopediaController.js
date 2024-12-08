@@ -80,7 +80,7 @@ const identifyPlant = async (req, res) => {
     const predictions = await predict(
       encyclopediaModel,
       req.file.buffer,
-      [224, 224]
+      [224, 224],
     );
 
     const maxIndex = predictions.indexOf(Math.max(...predictions));
@@ -92,7 +92,7 @@ const identifyPlant = async (req, res) => {
       return errorResponse(
         res,
         "Prediction confidence is too low. The image might not match any known plant.",
-        400
+        400,
       );
     }
 
@@ -137,11 +137,11 @@ const identifyPlant = async (req, res) => {
         plantInfo,
       },
       "Success predict plant",
-      201
+      201,
     );
   } catch (err) {
     console.error("Error in plant identification:", err.message);
-    return errorResponse(res, "Internal server error", 500);
+    return errorResponse(res, "Error in plant identification:", 500);
   }
 };
 
@@ -155,7 +155,7 @@ const getAllPlants = async (req, res) => {
 
     if (snapshot.empty) {
       // Gagal jika tidak ada data
-      return errorResponse(res, "Tidak ada data di ensiklopedia tanaman.", 404);
+      return errorResponse(res, "No data found in the encyclopedia", 404);
     }
 
     // Ambil semua data dokumen
@@ -169,11 +169,11 @@ const getAllPlants = async (req, res) => {
       res,
       plants,
       "Plants encyclopedia retrieved successfully",
-      200
+      200,
     );
   } catch (error) {
-    console.error("Error saat mengambil semua data tanaman:", error.message);
-    return errorResponse(res, "Terjadi kesalahan saat mengambil data", 500);
+    console.error("An error occurred while retrieving data:", error.message);
+    return errorResponse(res, "An error occurred while retrieving data", 500);
   }
 };
 
@@ -203,7 +203,7 @@ const getPlantById = async (req, res) => {
     return successResponse(res, plantInfo, "Success get plant by id", 200);
   } catch (error) {
     console.error("Error fetching plant by ID:", error.message);
-    return errorResponse(res, "Internal server error", 500);
+    return errorResponse(res, "Error fetching plant by ID", 500);
   }
 };
 
@@ -215,11 +215,7 @@ const getPlantByName = async (req, res) => {
   try {
     if (!name || typeof name !== "string") {
       // Gagal jika nama tidak valid atau tidak diberikan
-      return errorResponse(
-        res,
-        "Nama tanaman tidak diberikan atau tidak valid.",
-        400
-      );
+      return errorResponse(res, "Invalid or missing plant name", 400);
     }
 
     // Normalize nama input user untuk pencarian (lowercase)
@@ -246,21 +242,13 @@ const getPlantByName = async (req, res) => {
 
     if (results.length === 0) {
       // Gagal jika tidak ada data yang cocok
-      return errorResponse(
-        res,
-        `Tidak ada data tanaman yang cocok dengan '${name}'.`,
-        404
-      );
+      return errorResponse(res, "Plant not found in encyclopedia", 404);
     }
     // Berhasil mendapatkan data tanaman berdasarkan nama
     return successResponse(res, results, "Success get plant by name", 200);
   } catch (error) {
-    console.error("Error saat mencari tanaman:", error.message);
-    return errorResponse(
-      res,
-      "Terjadi kesalahan saat mencari data tanaman.",
-      500
-    );
+    console.error("Error fetching plant by Name", error.message);
+    return errorResponse(res, "Error fetching plant by Name", 500);
   }
 };
 
