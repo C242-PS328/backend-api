@@ -53,16 +53,6 @@ const generateCustomId = () => {
 // Fungsi untuk identifikasi tanaman berdasarkan gambar yang diunggah
 const identifyPlant = async (req, res) => {
   try {
-    if (!req.file || !req.file.buffer) {
-      // Gagal jika tidak ada file gambar
-      return errorResponse(res, "No image uploaded", 400);
-    }
-
-    if (req.file.size > 3 * 1024 * 1024) {
-      // Gagal jika ukuran file melebihi 3MB
-      return errorResponse(res, "Image size exceeds 3MB limit.", 400);
-    }
-
     // Lakukan prediksi pada gambar
     const predictions = await predict(
       encyclopediaModel,
