@@ -5,7 +5,7 @@ info:
   description: API documentation for detecting plant diseases and identifying plants using machine learning.
 
 servers:
-  - url: https://tanamore-be-539092052831.asia-southeast2.run.app/encyclopedias/
+  - url: https://tanamore-be-539092052831.asia-southeast2.run.app
     
 tags:
   - name: disease-detection
