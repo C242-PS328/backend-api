@@ -170,13 +170,13 @@ paths:
                     error: "Failed to upload image to the cloud storage."
 
   /encyclopedias/predict:
-    get:
+    post:
       tags:
         - plant-encyclopedia
       summary: Predict a plant from an uploaded image
       description: Retrieve the predicted plant and its details based on an uploaded image.
       responses:
-        "200":
+        "201":
           description: Successfully predicted plant details
           content:
             application/json:
