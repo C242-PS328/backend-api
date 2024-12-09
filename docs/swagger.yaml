@@ -6,7 +6,7 @@ info:
 
 servers:
   - url: https://tanamore-be-539092052831.asia-southeast2.run.app
-    
+
 tags:
   - name: disease-detection
     description: Plant disease detection operations
@@ -123,7 +123,7 @@ paths:
                   summary: Prediction confidence is too low
                   value:
                     status: "fail"
-                    error: "Prediction confidence is too low. The image might not match any known plant."    
+                    error: "Prediction confidence is too low. The image might not match any known plant."
         "404":
           description: Disease not found in the database
           content:
@@ -163,6 +163,12 @@ paths:
                   value:
                     status: "fail"
                     error: "Failed to save data in Firestore"
+                errorSavingImageToBucket:
+                  summary: Failed to save data in Cloud Storage Bucket
+                  value:
+                    status: "fail"
+                    error: "Failed to upload image to the cloud storage."
+
   /encyclopedias/predict:
     get:
       tags:
@@ -192,11 +198,11 @@ paths:
                       result:
                         type: string
                         description: The name of the predicted plant.
-                        example: "Snake Plant"
+                        example: "Pepper Bell"
                       confidence:
                         type: string
                         description: The confidence level of the prediction in percentage.
-                        example: "98.08"
+                        example: "99.91"
                       plantInfo:
                         type: object
                         description: Detailed information about the predicted plant.
@@ -204,68 +210,67 @@ paths:
                           plant_id:
                             type: string
                             description: A unique identifier for the plant.
-                            example: "plant_19"
+                            example: "plant_14"
                           image_url:
                             type: string
                             description: URL of the plant's encyclopedia image.
-                            example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/00_SnakePlant.jpg"
+                            example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/15_PepperBell.jpg"
                           plant_name:
                             type: string
                             description: The common name of the plant.
-                            example: "Snake plant"
+                            example: "Pepper Bell"
                           scientific_name:
                             type: string
                             description: The scientific name of the plant.
-                            example: "Dracaena trifasciata"
+                            example: "Capsicum annuum"
                           origin_place:
                             type: string
                             description: The origin or place of origin of the plant.
-                            example: "Afrika Barat"
+                            example: "Amerika Tengah dan Selatan"
                           description:
                             type: string
                             description: A detailed description of the plant.
-                            example: "Snake Plant memiliki karakteristik daun panjang yang tumbuh tegak, berbentuk seperti pedang dengan ujung runcing..."
+                            example: "Paprika adalah tanaman berbentuk perdu yang menghasilkan buah berbentuk lonceng..."
                           climate:
                             type: string
                             description: The ideal climate for the plant.
-                            example: "Iklim tropis dan subtropis; suhu ideal 15-30°C"
+                            example: "Iklim tropis hingga subtropis dengan suhu ideal 20–30°C."
                           fertilizer:
                             type: string
                             description: Type of fertilizer and application frequency.
-                            example: "Pupuk cair atau pupuk slow-release berbasis nitrogen rendah, digunakan setiap 2-3 bulan..."
+                            example: "Pupuk NPK dengan kandungan kalium tinggi, diaplikasikan setiap 3 minggu."
                           uses:
                             type: string
                             description: Common uses for the plant.
-                            example: "Obat: Digunakan untuk sakit kepala ringan. Hiasan: Cocok untuk dekorasi indoor maupun outdoor."
+                            example: "Bahan makanan: Digunakan dalam salad, masakan, atau sebagai hiasan..."
                           common_disease:
                             type: string
                             description: Common diseases or pests that affect the plant.
-                            example: "Root Rot: Disebabkan oleh penyiraman berlebih. Mealybugs: Serangan hama yang mengisap getah tanaman."
+                            example: "Anthracnose: Disebabkan oleh jamur Colletotrichum spp."
                           harvest_time:
                             type: string
                             description: Time it takes for the plant to reach optimal size.
-                            example: "6 bulan hingga 1 tahun untuk mencapai ukuran optimal (30-60 cm)..."
+                            example: "60–90 hari setelah tanam."
                           watering_frequency:
                             type: string
                             description: Frequency of watering required by the plant.
-                            example: "2 minggu sekali (musim panas), 3-4 minggu sekali (musim dingin)."
+                            example: "3 kali per minggu dengan jumlah air sekitar 300 ml per penyiraman."
+                          harvest_time_days:
+                            type: string
+                            description: Days needed for harvesting.
+                            example: "60"
                           watering_interval:
                             type: string
                             description: Watering interval recommendation for the plant.
-                            example: "Disiram setiap 2-3 minggu, tergantung kelembapan tanah dan suhu."
+                            example: "Disiram 3 kali per minggu dengan jumlah air sekitar 300 ml per penyiraman."
                           watering_time:
                             type: string
                             description: Specific time recommendation for watering the plant.
                             example: ""
-                          harvest_time_days:
-                            type: string
-                            description: Days needed for harvesting.
-                            example: ""
                       imageUrl:
                         type: string
-                        description: The URL of the uploaded image used for prediction.
-
-
+                        description: The URL of the uploaded image used for prediction.
+                        example: "https://storage.googleapis.com/tanamore/user_uploads_encyclopedia/20241209125018-eqecpo.jpg"
         "400":
           description: Bad request
           content:
@@ -297,7 +302,7 @@ paths:
                   summary: Prediction confidence is too low
                   value:
                     status: "fail"
-                    error: "Prediction confidence is too low. The image might not match any known plant."    
+                    error: "Prediction confidence is too low. The image might not match any known plant."
         "404":
           description: Plant not found in the encyclopedia
           content:
@@ -333,11 +338,18 @@ paths:
                   value:
                     status: "fail"
                     error: "Error in plant detection"
+
                 errorSavingToFirestore:
                   summary: Failed to save data in Firestore
                   value:
                     status: "fail"
                     error: "Failed to save data in Firestore"
+
+                errorSavingImageToBucket:
+                  summary: Failed to save data in Cloud Storage Bucket
+                  value:
+                    status: "fail"
+                    error: "Failed to upload image to the cloud storage."
 
   /encyclopedias:
     get:
@@ -367,14 +379,14 @@ paths:
                     items:
                       type: object
                       properties:
-                        id:
-                          type: string
-                          description: The ID of the plant.
-                          example: "plant_10"
                         plant_id:
                           type: string
                           description: A unique identifier for the plant.
-                          example: "plant_10"
+                          example: "plant_00"
+                        image_url:
+                          type: string
+                          description: URL of the plant's image.
+                          example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/10_AloeVera.jpg"
                         plant_name:
                           type: string
                           description: The common name of the plant.
@@ -383,10 +395,30 @@ paths:
                           type: string
                           description: The scientific name of the plant.
                           example: "Aloe barbadensis miller"
+                        origin_place:
+                          type: string
+                          description: The origin or place of origin of the plant.
+                          example: "Afrika Utara dan Timur Tengah"
                         description:
                           type: string
                           description: A brief description of the plant.
-                          example: "Aloe Vera adalah tanaman sukulen dengan daun tebal berwarna hijau kebiruan, berbentuk segitiga, dan ujungnya berduri kecil."
+                          example: "Aloe Vera adalah tanaman sukulen..."
+                        climate:
+                          type: string
+                          description: The ideal climate for the plant.
+                          example: "Iklim kering hingga semi-tropis dengan suhu antara 20–30°C"
+                        fertilizer:
+                          type: string
+                          description: Type of fertilizer and application frequency.
+                          example: "Pupuk organik atau pupuk sukulen..."
+                        uses:
+                          type: string
+                          description: Common uses for the plant.
+                          example: "Hiasan: Cocok untuk dekorasi indoor..."
+                        common_disease:
+                          type: string
+                          description: Common diseases or pests that affect the plant.
+                          example: "Root rot: Disebabkan oleh penyiraman berlebih..."
                         harvest_time:
                           type: string
                           description: The time it takes for the plant to reach maturity or be harvested.
@@ -394,39 +426,19 @@ paths:
                         watering_frequency:
                           type: string
                           description: The frequency with which the plant should be watered.
-                          example: "7–14 hari, tergantung pada kelembaban tanah dan suhu lingkungan."
+                          example: "7–14 hari, tergantung pada kelembaban tanah..."
                         watering_interval:
                           type: string
                           description: The interval at which the plant should be watered.
-                          example: "Disiram biasanya 1-2 minggu sekali, tergantung kondisi cuaca."
-                        origin_place:
+                          example: "Disiram biasanya 1-2 minggu sekali..."
+                        watering_time:
                           type: string
-                          description: The origin or place of origin of the plant.
-                          example: "Afrika Utara dan Timur Tengah"
-                        climate:
-                          type: string
-                          description: The ideal climate for the plant.
-                          example: "Iklim kering hingga semi-tropis dengan suhu antara 20–30C"
-                        fertilizer:
-                          type: string
-                          description: Type of fertilizer and application frequency.
-                          example: "Pupuk organik atau pupuk sukulen sekali setiap bulan selama musim semi dan musim panas."
-                        uses:
-                          type: string
-                          description: Common uses for the plant.
-                          example: "Hiasan: Cocok untuk dekorasi indoor dan outdoor karena bentuknya yang unik."
-                        common_disease:
-                          type: string
-                          description: Common diseases or pests that affect the plant.
-                          example: "Root rot: Disebabkan oleh penyiraman berlebih. Pest infestations: Rentan terhadap kutu putih dan tungau laba-laba."
+                          description: The ideal time for watering the plant.
+                          example: "06.00 AM"
                         harvest_time_days:
-                          type: integer
-                          description: The number of days it takes for the plant to be harvested.
-                          example: 180
-                        image_url:
                           type: string
-                          description: URL of the plant's image.
-                          example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/10_AloeVera.jpg"
+                          description: The number of days it takes for the plant to be harvested.
+                          example: "180"
         "404":
           description: No data found in the encyclopedia
           content:
@@ -471,7 +483,7 @@ paths:
           description: The ID of the plant to retrieve.
           schema:
             type: string
-            example: "plant_11"
+            example: "plant_14"
       responses:
         "200":
           description: The plant details retrieved successfully
@@ -495,59 +507,63 @@ paths:
                       plant_id:
                         type: string
                         description: Unique identifier for the plant.
-                        example: "plant_11"
-                      plant_name:
-                        type: string
-                        description: The common name of the plant.
-                        example: "Peach"
-                      scientific_name:
-                        type: string
-                        description: The scientific name of the plant.
-                        example: "Prunus persica"
-                      description:
-                        type: string
-                        description: A brief description of the plant.
-                        example: "Peach adalah tanaman buah yang memiliki pohon kecil hingga sedang dengan daun hijau lonjong dan bunga berwarna merah muda atau putih."
-                      harvest_time:
-                        type: string
-                        description: The time it takes for the plant to mature and be harvested.
-                        example: "90-150 hari setelah berbunga."
-                      watering_frequency:
-                        type: string
-                        description: How often the plant needs to be watered.
-                        example: "1-2 kali seminggu, tergantung pada tingkat kelembaban tanah dan kondisi cuaca."
-                      watering_interval:
-                        type: string
-                        description: The interval at which the plant should be watered.
-                        example: "Disiram secara teratur, terutama selama masa pertumbuhan dan pembentukan buah. Tanah harus tetap lembab tetapi tidak tergenang air."
-                      origin_place:
-                        type: string
-                        description: The origin place of the plant.
-                        example: "China"
-                      climate:
-                        type: string
-                        description: The ideal climate for the plant.
-                        example: "Suhu optimal antara 18-30C"
-                      fertilizer:
-                        type: string
-                        description: Fertilizer requirements for the plant.
-                        example: "Gunakan pupuk kaya nitrogen, fosfor, dan kalium. Pemupukan dilakukan setiap musim semi dan musim panas."
-                      uses:
-                        type: string
-                        description: Common uses for the plant.
-                        example: "Hiasan: Bunga Peach yang cantik sering digunakan sebagai tanaman hias, terutama di musim semi."
-                      common_disease:
-                        type: string
-                        description: Common diseases or pests affecting the plant.
-                        example: "Peach leaf curl: Disebabkan oleh jamur Taphrina deformans."
-                      harvest_time_days:
-                        type: integer
-                        description: The number of days it takes for the plant to be harvested.
-                        example: 730
+                        example: "plant_14"
                       image_url:
                         type: string
                         description: URL of the plant's image.
-                        example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/11_Peach.jpg"
+                        example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/15_PepperBell.jpg"
+                      plant_name:
+                        type: string
+                        description: The common name of the plant.
+                        example: "Pepper Bell"
+                      scientific_name:
+                        type: string
+                        description: The scientific name of the plant.
+                        example: "Capsicum annuum"
+                      origin_place:
+                        type: string
+                        description: The origin place of the plant.
+                        example: "Amerika Tengah dan Selatan"
+                      description:
+                        type: string
+                        description: A brief description of the plant.
+                        example: "Paprika adalah tanaman berbentuk perdu..."
+                      climate:
+                        type: string
+                        description: The ideal climate for the plant.
+                        example: "Iklim tropis hingga subtropis dengan suhu ideal 20–30°C."
+                      fertilizer:
+                        type: string
+                        description: Fertilizer requirements for the plant.
+                        example: "Pupuk NPK dengan kandungan kalium tinggi, diaplikasikan setiap 3 minggu."
+                      uses:
+                        type: string
+                        description: Common uses for the plant.
+                        example: "Bahan makanan: Digunakan dalam salad, masakan..."
+                      common_disease:
+                        type: string
+                        description: Common diseases or pests affecting the plant.
+                        example: "Anthracnose: Disebabkan oleh jamur Colletotrichum spp.."
+                      harvest_time:
+                        type: string
+                        description: The time it takes for the plant to mature and be harvested.
+                        example: "60–90 hari setelah tanam."
+                      watering_frequency:
+                        type: string
+                        description: How often the plant needs to be watered.
+                        example: "3 kali per minggu dengan jumlah air sekitar 300 ml per penyiraman."
+                      harvest_time_days:
+                        type: string
+                        description: The number of days it takes for the plant to be harvested.
+                        example: "60"
+                      watering_interval:
+                        type: string
+                        description: The interval at which the plant should be watered.
+                        example: "Disiram 3 kali per minggu dengan jumlah air sekitar 300 ml per penyiraman"
+                      watering_time:
+                        type: string
+                        description: The ideal time for watering the plant.
+                        example: "06.00 AM"
         "400":
           description: Invalid or missing plant ID
           content:
@@ -604,7 +620,7 @@ paths:
           description: The name or scientific name of the plant to search for.
           schema:
             type: string
-            example: "Peach"
+            example: "aloe"
       responses:
         "200":
           description: A list of plants retrieved successfully
@@ -623,66 +639,74 @@ paths:
                     example: "Success get plant by name"
                   data:
                     type: array
-                    description: A list of plants matching the search criteria or all plants if no name is provided.
+                    description: A list of plants matching the search criteria.
                     items:
                       type: object
                       properties:
+                        id:
+                          type: string
+                          description: Unique identifier for the plant.
+                          example: "plant_00"
                         plant_id:
                           type: string
                           description: Unique identifier for the plant.
-                          example: "plant_11"
-                        plant_name:
-                          type: string
-                          description: The common name of the plant.
-                          example: "Peach"
-                        scientific_name:
-                          type: string
-                          description: The scientific name of the plant.
-                          example: "Prunus persica"
-                        description:
-                          type: string
-                          description: A brief description of the plant.
-                          example: "Peach adalah tanaman buah yang memiliki pohon kecil hingga sedang dengan daun hijau lonjong dan bunga berwarna merah muda atau putih."
-                        harvest_time:
-                          type: string
-                          description: The time it takes for the plant to mature and be harvested.
-                          example: "90-150 hari setelah berbunga."
-                        watering_frequency:
-                          type: string
-                          description: How often the plant needs to be watered.
-                          example: "1-2 kali seminggu, tergantung pada tingkat kelembaban tanah dan kondisi cuaca."
-                        watering_interval:
-                          type: string
-                          description: The interval at which the plant should be watered.
-                          example: "Disiram secara teratur, terutama selama masa pertumbuhan dan pembentukan buah. Tanah harus tetap lembab tetapi tidak tergenang air."
-                        origin_place:
-                          type: string
-                          description: The origin place of the plant.
-                          example: "China"
-                        climate:
-                          type: string
-                          description: The ideal climate for the plant.
-                          example: "Suhu optimal antara 18-30C"
-                        fertilizer:
-                          type: string
-                          description: Fertilizer requirements for the plant.
-                          example: "Gunakan pupuk kaya nitrogen, fosfor, dan kalium. Pemupukan dilakukan setiap musim semi dan musim panas."
-                        uses:
-                          type: string
-                          description: Common uses for the plant.
-                          example: "Hiasan: Bunga Peach yang cantik sering digunakan sebagai tanaman hias, terutama di musim semi."
-                        common_disease:
-                          type: string
-                          description: Common diseases or pests affecting the plant.
-                          example: "Peach leaf curl: Disebabkan oleh jamur Taphrina deformans."
-                        harvest_time_days:
-                          type: integer
-                          description: The number of days it takes for the plant to be harvested.
-                          example: 730
+                          example: "plant_00"
                         image_url:
                           type: string
                           description: URL of the plant's image.
-                          example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/11_Peach.jpg"
+                          example: "https://storage.googleapis.com/tanamore/plant_encyclopedia/10_AloeVera.jpg"
+                        plant_name:
+                          type: string
+                          description: The common name of the plant.
+                          example: "Aloe Vera"
+                        scientific_name:
+                          type: string
+                          description: The scientific name of the plant.
+                          example: "Aloe barbadensis miller"
+                        origin_place:
+                          type: string
+                          description: The origin place of the plant.
+                          example: "Afrika Utara dan Timur Tengah"
+                        description:
+                          type: string
+                          description: A brief description of the plant.
+                          example: "Aloe Vera adalah tanaman sukulen dengan daun tebal..."
+                        climate:
+                          type: string
+                          description: The ideal climate for the plant.
+                          example: "Iklim kering hingga semi-tropis dengan suhu antara 20–30°C"
+                        fertilizer:
+                          type: string
+                          description: Fertilizer requirements for the plant.
+                          example: "Pupuk organik atau pupuk sukulen sekali setiap bulan..."
+                        uses:
+                          type: string
+                          description: Common uses for the plant.
+                          example: "Hiasan: Cocok untuk dekorasi indoor dan outdoor..."
+                        common_disease:
+                          type: string
+                          description: Common diseases or pests affecting the plant.
+                          example: "Root rot: Disebabkan oleh penyiraman berlebih."
+                        harvest_time:
+                          type: string
+                          description: The time it takes for the plant to mature and be harvested.
+                          example: "6-8 bulan sejak ditanam untuk gelnya."
+                        watering_frequency:
+                          type: string
+                          description: How often the plant needs to be watered.
+                          example: "7–14 hari, tergantung pada kelembaban tanah dan suhu lingkungan."
+                        harvest_time_days:
+                          type: string
+                          description: The number of days it takes for the plant to be harvested.
+                          example: "180"
+                        watering_interval:
+                          type: string
+                          description: The interval at which the plant should be watered.
+                          example: "Disiram biasanya 1-2 minggu sekali, tergantung kondisi cuaca."
+                        watering_time:
+                          type: string
+                          description: The ideal time for watering the plant.
+                          example: ""
         "400":
           description: Invalid or missing plant name
           content:
