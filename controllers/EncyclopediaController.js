@@ -1,5 +1,7 @@
 const { predict, loadModelEncyclopedia } = require("../utils/mlUtils");
 const { errorResponse, successResponse } = require("../utils/responseUtils");
+const { Storage } = require("@google-cloud/storage");
+const storage = new Storage();
 
 const classLabels = [
   "Aloe Vera",
@@ -49,20 +51,30 @@ const generateCustomId = () => {
   const randomPart = Math.random().toString(36).substring(2, 8);
   return `${timestamp}-${randomPart}`;
 };
+// Fungsi upload image ke bucket
+const uploadImageToBucket = async (imageBuffer, filename) => {
+  try {
+    const folderPath = "user_uploads_encyclopedia/"; // Folder yang diinginkan di dalam bucket
+    const fullFilename = `${folderPath}${filename}`; // Gabungkan folder dan nama file
 
+    const bucket = storage.bucket(process.env.BUCKET_NAME);
+    const file = bucket.file(fullFilename);
+
+    // Upload file ke bucket
+    await file.save(imageBuffer, {
+      resumable: false,
+      contentType: "image/jpeg", // Sesuaikan dengan tipe file yang di-upload
+    });
+
+    return `https://storage.googleapis.com/${process.env.BUCKET_NAME}/${fullFilename}`; // URL file yang di-upload
+  } catch (error) {
+    console.error("Error uploading image to bucket:", error.message);
+    throw new Error("Failed to upload image to the cloud storage."); // Lempar error jika gagal
+  }
+};
 // Fungsi untuk identifikasi tanaman berdasarkan gambar yang diunggah
 const identifyPlant = async (req, res) => {
   try {
-    if (!req.file || !req.file.buffer) {
-      // Gagal jika tidak ada file gambar
-      return errorResponse(res, "No image uploaded", 400);
-    }
-
-    if (req.file.size > 3 * 1024 * 1024) {
-      // Gagal jika ukuran file melebihi 3MB
-      return errorResponse(res, "Image size exceeds 3MB limit.", 400);
-    }
-
     // Lakukan prediksi pada gambar
     const predictions = await predict(
       encyclopediaModel,
@@ -73,6 +85,11 @@ const identifyPlant = async (req, res) => {
     const maxIndex = predictions.indexOf(Math.max(...predictions));
     const predictedClass = classLabels[maxIndex];
     const confidence = (predictions[maxIndex] * 100).toFixed(2);
+    const plantId = `plant_${maxIndex.toString().padStart(2, "0")}`;
+    const filename = `${generateCustomId()}.jpg`;
+
+    // Upload image to Cloud Storage
+    const imageUrl = await uploadImageToBucket(req.file.buffer, filename);
 
     if (confidence < 50) {
       // Gagal jika tingkat keyakinan prediksi terlalu rendah
@@ -85,25 +102,24 @@ const identifyPlant = async (req, res) => {
 
     // Query Firestore untuk mendapatkan detail tanaman
     const firestore = require("firebase-admin").firestore();
-    const snapshot = await firestore
-      .collection("plant_encyclopedias")
-      .where("plant_name", "==", predictedClass)
-      .get();
+    const docRef = firestore.collection("plant_encyclopedias").doc(plantId);
+    const doc = await docRef.get();
 
-    if (snapshot.empty) {
-      // Gagal jika tanaman tidak ditemukan di ensiklopedia
-      return errorResponse(res, "Plant not found in the encyclopedia.", 404);
+    if (!doc.exists) {
+      return errorResponse(res, "Plant not found in the database", 404);
     }
 
-    const plantInfo = snapshot.docs[0].data();
+    const plantInfo = doc.data();
 
     // Simpan hasil prediksi ke Firestore
     const predictionData = {
       id: generateCustomId(), // ID unik dengan timestamp dan bagian acak
+      plantId,
       predictedClass,
       confidence: `${confidence}%`,
-      plantInfo, // Detail tanaman
+      imageUrl,
       createdAt: new Date(),
+      plantInfo, // Detail tanaman
     };
 
     try {
@@ -122,6 +138,7 @@ const identifyPlant = async (req, res) => {
         result: predictedClass,
         confidence: `${confidence}`,
         plantInfo,
+        imageUrl,
       },
       "Success predict plant",
       201,
