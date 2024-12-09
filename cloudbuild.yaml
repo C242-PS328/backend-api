@@ -1,0 +1,25 @@
+steps:
+  # Langkah 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/tanamore/tanamore-backend:v4', '.']
+
+  # Langkah 2: Push Docker image ke Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/tanamore/tanamore-backend:v4', '.']
+
+    # Langkah 3: Deploy ke Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'tanamore'
+      - '--image'
+      - 'gcr.io/tanamore/tanamore-backend:v4'
+      - '--region'
+      - 'asia-southeast2'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/tanamore/tanamore-backend:v4'
