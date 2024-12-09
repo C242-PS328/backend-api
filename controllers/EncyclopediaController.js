@@ -155,7 +155,7 @@ const getAllPlants = async (req, res) => {
 
   try {
     // Query semua dokumen di koleksi plant_encyclopedias
-    const snapshot = await firestore.collection("encylopedia_plants").get();
+    const snapshot = await firestore.collection("encyclopedia_plants").get();
 
     if (snapshot.empty) {
       // Gagal jika tidak ada data
