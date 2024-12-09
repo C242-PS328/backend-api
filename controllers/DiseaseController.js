@@ -94,14 +94,6 @@ const uploadImageToBucket = async (imageBuffer, filename) => {
 // Fungsi untuk prediksi penyakit tanaman
 const detectDisease = async (req, res) => {
   try {
-    if (!req.file || !req.file.buffer) {
-      return errorResponse(res, "No image uploaded", 400);
-    }
-
-    if (req.file.size > 3 * 1024 * 1024) {
-      return errorResponse(res, "Image size exceeds 3MB limit.", 400);
-    }
-
     const predictions = await predict(
       diseaseModel,
       req.file.buffer,

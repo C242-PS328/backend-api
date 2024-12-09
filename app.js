@@ -10,7 +10,7 @@ const swaggerDocument = YAML.load("./docs/swagger.yaml");
 const admin = require("firebase-admin");
 
 admin.initializeApp({
-  credential: admin.credential.cert(process.env.GOOGLE_APPLICATION_CREDENTIALS),
+  credential: admin.credential.cert(process.env.GOOGLE_CREDENTIALS),
 });
 
 // Middleware
