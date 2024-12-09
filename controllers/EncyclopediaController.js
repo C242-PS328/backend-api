@@ -100,12 +100,10 @@ const identifyPlant = async (req, res) => {
       );
     }
 
-    // Query Firestore untuk mendapatkan detail tanaman
+    // Query Firestore
     const firestore = require("firebase-admin").firestore();
-    const snapshot = await firestore
-      .collection("plant_encyclopedias")
-      .where("plant_name", "==", predictedClass)
-      .get();
+    const docRef = firestore.collection("encyclopedia_plants").doc(plantId);
+    const doc = await docRef.get();
 
     if (!doc.exists) {
       return errorResponse(res, "Plant not found in the database", 404);
