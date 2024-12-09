@@ -102,7 +102,7 @@ const identifyPlant = async (req, res) => {
 
     // Query Firestore untuk mendapatkan detail tanaman
     const firestore = require("firebase-admin").firestore();
-    const docRef = firestore.collection("plant_encyclopedias").doc(plantId);
+    const docRef = firestore.collection("encyclopedia_plants").doc(plantId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -155,7 +155,7 @@ const getAllPlants = async (req, res) => {
 
   try {
     // Query semua dokumen di koleksi plant_encyclopedias
-    const snapshot = await firestore.collection("plant_encyclopedias").get();
+    const snapshot = await firestore.collection("encylopedia_plants").get();
 
     if (snapshot.empty) {
       // Gagal jika tidak ada data
@@ -194,7 +194,7 @@ const getPlantById = async (req, res) => {
   try {
     // Cari dokumen di koleksi plant_encyclopedias berdasarkan plant_id
     const doc = await firestore
-      .collection("plant_encyclopedias")
+      .collection("encyclopedia_plants")
       .doc(plant_id)
       .get();
 
@@ -225,7 +225,7 @@ const getPlantByName = async (req, res) => {
     // Normalize nama input user untuk pencarian (lowercase)
     const searchTerm = name.toLowerCase();
 
-    const collection = firestore.collection("plant_encyclopedias");
+    const collection = firestore.collection("encyclopedia_plants");
 
     // Ambil semua data, lalu filter secara manual (jika substrings dibutuhkan)
     const snapshot = await collection.get();
