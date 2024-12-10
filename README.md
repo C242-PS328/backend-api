@@ -43,6 +43,19 @@ Backend service for Tanamore, a plant disease detection and encyclopedia applica
 
 ---
 
+## **Architecture Diagram**
+
+![Tanamore Architecture](https://github.com/Tanamore/backend-api/blob/015cc09b8b653adde0b213e663249b2a28170e3b/image/TanamoreCloudArchitecture.png)
+
+## **Architecture Flow**
+
+User-uploaded images are processed through **Cloud Storage** and analyzed using machine learning models integrated with the backend. Prediction results and metadata are stored in **Firestore** for retrieval via API endpoints. Authentication is handled by **Firebase Authentication**, ensuring secure access. CI/CD pipelines are managed using **Cloud Build**, while the application is hosted on **Cloud Run** for scalability and serverless deployment.
+
+Additional components like **Secret Manager** secure sensitive credentials, and **Artifact Registry** stores containerized application artifacts for smooth deployment workflows.
+
+
+---
+
 ## Folder Structure
 ```
 . 
