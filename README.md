@@ -94,6 +94,30 @@ Additional components like **Secret Manager** secure sensitive credentials, and 
 - **`cloudbuild.yaml`**: Configuration for Google Cloud Build.
 - **`Dockerfile`**: Instructions to containerize the application.
 
+---
+
+## **Available Scripts**
+- `start`: Starts the application in production mode.
+- `dev`: Runs the application in development mode with hot-reloading.
+- `convert`: Import csv file into firestore database (if needed). 
+
+---
+
+## API Documentation
+
+| Endpoint      | HTTP Method |  Description  |
+| ------------- | ----------- | ------------- |
+| /diseases/predict  | POST |  Predict disease plant
+| /encyclopedias/predict  | POST | Identifying encyclopedia plant
+| /encyclopedias  | GET |  Get all data encyclopedias
+| /encyclopedias/:id  | GET | Get Plant Encyclopedia by `ID`
+| /encyclopedias/search  | GET  | Get Plant Encyclopedia by `Name`
+
+For more detail information about our `Documentation API` you can check the URL below  
+`Documentation API` URL :  https://tanamore-be-539092052831.asia-southeast2.run.app/docs/ 
+
+---
+
 ## **How to Install**
 1. Clone the repository and navigate to the directory:
     ```bash
@@ -118,26 +142,45 @@ Additional components like **Secret Manager** secure sensitive credentials, and 
     ```bash
     npm run dev
     ```
-
 ---
 
-## **Available Scripts**
-- `start`: Starts the application in production mode.
-- `dev`: Runs the application in development mode with hot-reloading.
-- `convert`: Import csv file into firestore database (if needed). 
+## **Prerequisites**
 
+Before running the **Tanamore Backend Service**, ensure that you have the following installed and configured:
+
+1. **Node.js**:
+   - Ensure that **Node.js** version 18 or higher is installed. The exact version can be found in the `package.json` under the `engines` field.
+   - **Node.js** is used as the runtime for running the backend server and managing dependencies.
+
+   Install Node.js from the [official Node.js website](https://nodejs.org/en/).
+
+2. **Google Cloud SDK**:
+   - Install the **Google Cloud SDK** to manage Google Cloud services such as **Cloud Run**, **Firestore**, and **Cloud Storage**.
+   - This SDK is also used for configuring application credentials and accessing Google Cloud services.
+
+   Install the Google Cloud SDK from the [Google Cloud SDK documentation](https://cloud.google.com/sdk/docs/install).
+
+3. **Google Cloud Project and Configuration**:
+   - This project requires Google Cloud credentials to access **Cloud Storage** and **Firestore**.
+   - Make sure you have a Google Cloud project set up and have enabled the necessary services such as **Firestore**, **Cloud Storage**, and **Cloud Run**.
+   - Save the service account credentials file (usually in JSON format) and configure the path in the `.env` file under `GOOGLE_CREDENTIALS`.
+
+4. **Cloud Firestore**:
+   - **Firestore** is used to store prediction results and plant metadata.
+   - You need to create a Firestore database in the Google Cloud Console and configure the proper access through Firebase or Google Cloud IAM.
+
+5. **Cloud Storage**:
+   - Ensure that you have configured **Cloud Storage** to store the uploaded plant images and machine learning models.
+   - In the **Google Cloud Console**, create a storage bucket and set the appropriate access permissions to be used by the application.
+
+6. **Environment Variables**:
+   - Before running the application, make sure to set up the `.env` file based on the template in `.env.example` and fill in the required variables, such as:
+     - `MODEL1_URL`: The URL or path to your machine learning model file.
+     - `MODEL2_URL`: The URL or path to another model file if applicable.
+     - `GOOGLE_CREDENTIALS`: The path to your Google Cloud service account credentials file.
+     - `BUCKET_NAME`: The name of the storage bucket in Google Cloud.
+
+   Ensure that the values in the `.env` file match the configuration in your Google Cloud Project.
+
+Once these prerequisites are met, you are ready to run the Tanamore application and ensure smooth integration with Google Cloud services.
 ---
-
-## API Documentation
-
-| Endpoint      | HTTP Method |  Description  |
-| ------------- | ----------- | ------------- |
-| /diseases/predict  | POST |  Predict disease plant
-| /encyclopedias/predict  | POST | Identifying encyclopedia plant
-| /encyclopedias  | GET |  Get all data encyclopedias
-| /encyclopedias/:id  | GET | Get Plant Encyclopedia by `ID`
-| /encyclopedias/search  | GET  | Get Plant Encyclopedia by `Name`
-
-For more detail information about our `Documentation API` you can check the URL below  
-`Documentation API` URL :  https://tanamore-be-539092052831.asia-southeast2.run.app/docs/ 
-
