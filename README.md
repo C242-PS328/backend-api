@@ -115,4 +115,16 @@ Backend service for Tanamore, a plant disease detection and encyclopedia applica
 
 ---
 
+## API Documentation
+
+| Endpoint      | HTTP Method |  Description  |
+| ------------- | ----------- | ------------- |
+| /diseases/predict  | POST |  Predict disease plant
+| /encyclopedias/predict  | POST | Identifying encyclopedia plant
+| /encyclopedias  | GET |  Get all data encyclopedias
+| /encyclopedias/:id  | GET | Get Plant Encyclopedia by `ID`
+| /encyclopedias/search  | GET  | Get Plant Encyclopedia by `Name`
+
+For more detail information about our `Documentation API` you can check the URL below  
+`Documentation API` URL :  https://tanamore-be-539092052831.asia-southeast2.run.app/docs/ 
 
