@@ -2,6 +2,14 @@
 Backend service for Tanamore, a plant disease detection and encyclopedia application.
 
 ---
+## **Fitur Utama**
+- **Prediksi Penyakit Tanaman dengan Machine Learning**: Menggunakan model machine learning untuk mendeteksi penyakit pada tanaman berdasarkan gambar yang diunggah pengguna.
+- **Prediksi Jenis Tanaman dengan Machine Learning**: Menggunakan model machine learning untuk mendeteksi jenis tanaman berdasarkan gambar yang diunggah pengguna.
+- **Dokumentasi API dengan Swagger**: API yang lengkap dengan dokumentasi interaktif yang dapat diakses melalui endpoint `/docs`.
+- **Fitur Ensiklopedia**: Menyediakan endpoint untuk membaca data tanaman di ensiklopedia.
+- **Penyimpanan Hasil di Firestore**: Menyimpan hasil prediksi dan data tanaman di Firestore untuk pengelolaan data yang efisien.
+
+---
 
 ## **Technology**
 - **Node.js**: JavaScript runtime for building scalable backend applications.
