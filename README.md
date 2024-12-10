@@ -1,4 +1,4 @@
-# Tanamore Backend Service
+# Tanamore | Cloud Computing Documentation
 Backend service for Tanamore, a plant disease detection and encyclopedia application.
 
 ---
