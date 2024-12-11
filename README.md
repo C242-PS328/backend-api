@@ -181,6 +181,6 @@ Before running the **Tanamore Backend Service**, ensure that you have the follow
      - `BUCKET_NAME`: The name of the storage bucket in Google Cloud.
 
    Ensure that the values in the `.env` file match the configuration in your Google Cloud Project.
+Once these prerequisites are met, you are ready to run the Tanamore application and ensure smooth integration with Google Cloud services.
 
-   - Once these prerequisites are met, you are ready to run the Tanamore application and ensure smooth integration with Google Cloud services.
 ---
