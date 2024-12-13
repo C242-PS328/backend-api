@@ -175,6 +175,17 @@ paths:
         - plant-encyclopedia
       summary: Predict a plant from an uploaded image
       description: Retrieve the predicted plant and its details based on an uploaded image.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: The image file of the plant leaf to be analyzed.
       responses:
         "201":
           description: Successfully predicted plant details
